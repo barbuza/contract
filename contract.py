@@ -528,11 +528,18 @@ class DictC(Contract):
     Traceback (most recent call last):
     ...
     ContractValidationError: bar: value is not string
+    >>> contract = DictC().allow_extra("foo", "bar", "spam").require_one_of("foo", "bar")
+    >>> contract.check({"foo": 1})
+    >>> contract.check({"spam": 2})
+    Traceback (most recent call last):
+    ...
+    ContractValidationError: one of ['foo', 'bar'] is required
     """
     
     def __init__(self, **contracts):
         self.optionals = []
         self.extras = []
+        self.one_of = []
         self.allow_any = False
         self.contracts = {}
         for key, contract in contracts.items():
@@ -544,6 +551,10 @@ class DictC(Contract):
                 self.allow_any = True
             else:
                 self.extras.append(name)
+        return self
+    
+    def require_one_of(self, *names):
+        self.one_of.append(names)
         return self
     
     def allow_optionals(self, *names):
@@ -564,6 +575,12 @@ class DictC(Contract):
         for key in self.contracts:
             if key not in self.optionals and key not in value:
                 self._failure("%s is required" % key)
+        for one_of in self.one_of:
+            for item in one_of:
+                if item in value:
+                    break
+            else:
+                self._failure("one of %r is required" % list(one_of))
     
     def check_item(self, item):
         key, value = item
