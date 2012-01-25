@@ -640,11 +640,14 @@ class MappingC(Contract):
             try:
                 self.keyC.check(key)
             except ContractValidationError as err:
-                raise ContractValidationError(err.msg, "(key %r)" % key)
+                name = "%s.%s" % (key, err.name) if err.name else key
+                raise ContractValidationError(err.msg, "(key %r)" % name)
             try:
                 self.valueC.check(value)
             except ContractValidationError as err:
-                raise ContractValidationError(err.msg, "(value for key %r)" % key)
+                name = "%s.%s" % (key, err.name) if err.name else key
+                raise ContractValidationError(err.msg, "(value for key %r)" % name)
+
     
     def __repr__(self):
         return "<MappingC(%r => %r)>" % (self.keyC, self.valueC)
